@@ -2,7 +2,10 @@
 title: "An intro to cloud native approaches for big data analysis"
 output: pdf_document
 date: "2022-11-08"
+urlcolor: blue
 ---
+
+
 
 Monitoring technology - from satellites to smart phones - is creating vast amounts of data every day. These data hold promise to provide global insights on everything from biodiversity patterns to vegetation change at increasingly fine spatial and temporal resolution. But leveraging this information often requires us to work with data that is too big to fit in our computer's "working memory" (RAM) or even to download to our computer's hard drive. Some data - like high resolution remote sensing imagery - might be too large to download even when we have access to big locally managed compute infrastructure. 
 
