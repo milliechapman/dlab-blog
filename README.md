@@ -7,3 +7,5 @@ Monitoring technologies - from satellites to smart phones - are creating vast am
 In this post, I will walk through some tools, terms, and examples to get started with cloud native workflows. These workflows allow us to remotely access and query large data from online resources or web services, all while skipping the download step. We'll touch on a couple common data storage and cataloging structures (Parquet files, S3) and tools to query these online data (Apache Arrow and Vsicurl). I'll focus on a tabular data example but touch on spatial data - sharing resources along the way for deeper dives on each of the topics and tools. 
 
 Example code is provided in R and case studies focused on environmental data, but these concepts are not specific to a programming language or research domain. I hope that this post provides a starting point for anyone interested in working with big data using cloud native approaches!
+
+[Read more!](https://github.com/milliechapman/dlab-blog/blob/main/blog-post.md)
