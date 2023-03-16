@@ -1,37 +1,35 @@
 ---
 title: "An intro to cloud native approaches for big data analysis"
-output: pdf_document
-date: "2022-11-08"
+output: github_document
+date: "2023-3-15"
 urlcolor: blue
 ---
 
+Monitoring technologies - from satellites to smart phones - are creating vast amounts of data about our earth every day. These data hold promise to provide global insights on everything from biodiversity patterns to vegetation change at increasingly fine spatial and temporal resolution. But leveraging this information often requires us to work with data that is too big to fit in our computer's "working memory" (RAM) or even to download to our computer's hard drive. Some data - like high resolution remote sensing imagery - might be too large to download even when we have access to big  compute infrastructure. 
 
-
-Monitoring technology - from satellites to smart phones - is creating vast amounts of data every day. These data hold promise to provide global insights on everything from biodiversity patterns to vegetation change at increasingly fine spatial and temporal resolution. But leveraging this information often requires us to work with data that is too big to fit in our computer's "working memory" (RAM) or even to download to our computer's hard drive. Some data - like high resolution remote sensing imagery - might be too large to download even when we have access to big locally managed compute infrastructure. 
-
-In this post, I will walk through some tools, terms, and examples to get started with cloud native workflows. These workflows allow us to remotely access and query large data from online resources or web services, all while skipping the download step. We'll touch on a couple common data storage and cataloging structures (Parquet files, S3, and STAC) and tools to query these online data (Apache Arrow and Vsicurl). I'll start with tabular data example and then move on to spatial data - sharing resources along the way for deeper dives on each of the topics and tools. 
+In this post, I will walk through some tools, terms, and examples to get started with cloud native workflows. These workflows allow us to remotely access and query large data from online resources or web services, all while skipping the download step. We'll touch on a couple common data storage and cataloging structures (Parquet files, S3) and tools to query these online data (Apache Arrow and Vsicurl). I'll focus on a tabular data example but touch on spatial data - sharing resources along the way for deeper dives on each of the topics and tools. 
 
 Example code will be provided in R and case studies focused on environmental data, but these concepts are not specific to a programming language or research domain. I hope that this post provides a starting point for anyone interested in working with big data using cloud native approaches!
 
 # Tabular data: Querying files from cloud storage with Apache Arrow 
 
-**Example: Plotting biodiversity observations through time**
+**Example: Plotting billions of biodiversity observations through time**
 
-The Global Biodiversity Information Facilty (GBIF) synthesizes biodiversity data derived from a variety of sources - including everything from museum specimens to smartphone photos recorded on participatory science platforms like eBird and iNaturalist. The database includes over a billion species occurance records - probably not too big to download onto your machine's hard drive, but likely too big to read into your working memory. Downloading the whole database and then figuring out how to work with it seems like a drag, so we will walk through a cloud native approach to collect and download only the information we need from this database
+The Global Biodiversity Information Facilty (GBIF) synthesizes biodiversity data derived from a variety of sources - ranging from museum specimens to smartphone photos recorded on participatory science platforms. The database includes over a billion species occurrence records - probably not too big to download onto your machine's hard drive, but likely too big to read into your working memory. Downloading the whole database and then figuring out how to work with it is truly a drag (you can trust me on that, or you can try it yourself!), so we will walk through a cloud native approach to collect and download only the information we need from this database - hopefully highlighting the power of these tools! 
 
 *Step 1. Finding the data online:*
 
-There are snapshots (i.e., versions) of the entire GBIF database on Amazon Web Services (AWS) S3 (you check them out and pick a version [here](https://gbif-open-data-af-south-1.s3.af-south-1.amazonaws.com/index.html#occurrence/)). Lots of data is stored on AWS or other S3 compatible platforms (not just observation records of plants and animals), so the following workflow is not specific to GBIF. 
+There are snapshots (i.e., versions) of the entire GBIF database on Amazon Web Services (AWS) S3 (you check them out and pick a version [here](https://gbif-open-data-af-south-1.s3.af-south-1.amazonaws.com/index.html#occurrence/)). A lot of data is stored on AWS or other S3 compatible platforms (not just observation records of plants and animals), so the following workflow is not specific to GBIF. 
 
 *What is S3?* Simple Storage Service (S3) is just a structure of object storage through a web service interface. S3 compatibility is a requirement for cloud-native workflows (what we are working towards here) - cloud-native applications use the S3 API to communicate with object storage. The GBIF snapshot we leverage here is stored on Amazon Web Services (AWS) S3, but there are other s3 compatible object storage platforms (e.g., [MinIO](https://min.io/)) that you can query with the same methods that we will explore below. 
 
 First, we will grab the S3 Uniform Resource Identifier (URI) for a recent GBIF snapshot (note the `s3://` placed before the URI name)
 
 ```{r}
-gbif_snapshot <- "s3://gbif-open-data-af-south-1/occurrence/2022-11-01/occurrence.parquet"
+gbif_snapshot <- "s3://gbif-open-data-us-east-1/occurrence/2022-11-01/occurrence.parquet"
 ```
 
-You might also notice that this is a `.parquet` file. *What is a Parquet file?* Parquet is an open source, column-oriented data file format designed for efficient data storage and retrieval. You can read all about it [here](https://parquet.apache.org/docs/overview/). You can just think of it as a more efficient way to store tabular data - what you might otherwise store in a `.csv`. 
+You might notice that this is a `.parquet` file. *What is a Parquet file?* Parquet is an open source, column-oriented data file format designed for efficient data storage and retrieval. You can read all about it [here](https://parquet.apache.org/docs/overview/). You can just think of it as an efficient way to store tabular data - what you might otherwise store in a `.csv`. 
 
 We'll use the R package [`arrow`](https://github.com/apache/arrow/blob/master/r/cheatsheet/arrow-cheatsheet.pdf) which supports reading data sets from cloud storage without having to download them (allowing for large queries to run locally by only downloading the parts of the data-set necessary). You can read more about [Apache Arrow](https://arrow.apache.org/) here if you are interested in digging deeper into other applications (or interested in interfacing with the `arrow` package in other programming languages like python)! Note that arrow doesn't require that data is a parquet file - it also works with "csv", "text" and "feather" file formats.
 
@@ -40,8 +38,8 @@ library(arrow)
 library(tidyverse)
 ```
 
-The `open_dataset` function connects us to the online parquet file (gbif snapshot from above).
-Notice that this doesn't load the entire dataset into your computer's memory. Conveniently, we can still take a look at the variable names (and even take a glimpse at a small subset of the data) 
+The `open_dataset` function connects us to the online parquet file (in this case, the gbif snapshot from above).
+Notice that this doesn't load the entire dataset into your computer's memory, but, conveniently, we can still take a look at the variable names (and even take a glimpse at a small subset of the data!) 
 
 ```{r eval = FALSE}
 db <- open_dataset(gbif_snapshot)
@@ -87,7 +85,7 @@ There are lots of other applications of arrow that we won't get into here (e.g.,
 
 # Raster data: STAC and vsicurl
 
-Cloud native workflows are not limited to querying tabular data (e.g., parquet, csv files) but can also be super helpful for working with spatiotemporal data. We'll focus on reading and querying data using SpatioTemporal Asset Catalog (STAC) (STAC is just a common language to describe geospatial information, so it can more easily be worked with, indexed, and discovered. More info [here](https://stacspec.org/en)). Lots of spatiotemporal data is in STAC -- for example, [Microsoft planetary computer data catalog](https://planetarycomputer.microsoft.com/catalog) includes petabytes of environmental monitoring data using STAC format.
+Cloud native workflows are not limited to querying tabular data (e.g., parquet, csv files) as explored above but can also be super helpful for working with spatiotemporal data. We'll focus on reading and querying data using SpatioTemporal Asset Catalog (STAC) (STAC is just a common language to describe geospatial information, so it can more easily be worked with, indexed, and discovered. More info [here](https://stacspec.org/en)). Lots of spatiotemporal data is in STAC -- for example, [Microsoft planetary computer data catalog](https://planetarycomputer.microsoft.com/catalog) includes petabytes of environmental monitoring data using STAC format.
 
 We’ll use the `rstac` library to make requests to the planetary computer's STAC API (and like our tabular example, similar workflows are available in [python](https://planetarycomputer.microsoft.com/docs/quickstarts/reading-stac/))
 
@@ -109,7 +107,7 @@ SF <- st_read("https://dsl.richmond.edu/panorama/redlining/static/downloads/geoj
 bbox = st_bbox(SF)
 ```
 
-And we can take a look at a given collection (e.g., Landsat data) 
+And we can take a look at a given "collection" of data (e.g., Landsat data) 
 
 ```{r}
 it_obj <- s_obj %>%
@@ -127,7 +125,8 @@ data <- rast(url)
 plot(data)
 ```
 
-We can do computation over the network too - for example calculating NDVI using a subset of bands in Landsat of Sentinel data
+We can do computation over the network too - for example calculating we can calculate NDVI using a subset of bands in Landsat imagry
 
-[add a bit more text about what you can do and point to some more examples..]
+## Conclusion
+
 
